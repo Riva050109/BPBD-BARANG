@@ -6,22 +6,21 @@ use Illuminate\Database\Eloquent\Model;
 
 class BarangMasuk extends Model
 {
-    protected $table = 'barang_masuk'; // Nama tabel di database
+    // ⭐⭐⭐ TAMBAHKAN BARIS INI ⭐⭐⭐
+    protected $table = 'barang_masuk'; // Nama tabel tanpa 's'
     
     protected $fillable = [
-        'kode_transaksi',
         'barang_id',
-        'jumlah',
         'tanggal_masuk',
-        'supplier',
-        'keterangan'
+        'jumlah',
+        'harga_satuan',
+        'total_nilai',
+        'keterangan',
+        'user_id'
     ];
 
-    /**
-     * Relasi ke Barang
-     */
     public function barang()
     {
-        return $this->belongsTo(Barang::class, 'barang_id');
+        return $this->belongsTo(Barang::class);
     }
 }

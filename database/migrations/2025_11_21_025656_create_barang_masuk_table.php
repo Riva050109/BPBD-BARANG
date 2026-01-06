@@ -10,16 +10,25 @@ return new class extends Migration
     {
         Schema::create('barang_masuk', function (Blueprint $table) {
             $table->id();
+
             $table->date('tanggal_masuk');
-            $table->string('no_transaksi')->unique();
-            $table->enum('jenis_cv', ['sekretariat', 'pencegahan', 'kedaruratan', 'rehabilitasi']);
-            $table->foreignId('barang_id')->constrained('barang')->onDelete('cascade');
-            $table->foreignId('kategori_id')->constrained('kategori_barang')->onDelete('cascade');
+
+            $table->foreignId('barang_id')
+                ->constrained('barang')
+                ->cascadeOnDelete();
+
             $table->integer('jumlah');
-            $table->string('satuan');
+
             $table->decimal('harga_satuan', 15, 2);
+
+            $table->decimal('total_nilai', 15, 2);
+
             $table->text('keterangan')->nullable();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+
+            $table->foreignId('user_id')
+                ->constrained('users')
+                ->cascadeOnDelete();
+
             $table->timestamps();
         });
     }

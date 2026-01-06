@@ -41,14 +41,15 @@
                 <div class="col-md-3">
                     <label class="form-label fw-semibold">Bidang</label>
                     <select name="bidang" class="form-select">
-                        <option value="">Semua Bidang</option>
-                        @foreach($bidang ?? [] as $b)
-                        <option value="{{ is_object($b) ? $b->kode_bidang : $b }}"
-                                {{ request('bidang') == (is_object($b) ? $b->kode_bidang : $b) ? 'selected' : '' }}>
-                            {{ is_object($b) ? $b->nama_bidang : $b }}
-                        </option>
-                        @endforeach
-                    </select>
+    <option value="">Semua Bidang</option>
+    @foreach ($bidang as $b)
+        <option value="{{ $b->kode }}"
+            {{ request('bidang') == $b->kode ? 'selected' : '' }}>
+            {{ $b->nama }}
+        </option>
+    @endforeach
+</select>
+
                 </div>
                 <div class="col-md-3">
                     <label class="form-label fw-semibold">&nbsp;</label>

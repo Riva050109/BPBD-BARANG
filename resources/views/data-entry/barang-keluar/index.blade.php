@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Barang Keluar')
-@section('icon', 'fa-sign-out-alt')
+@section('icon', '')
 
 @section('content')
 <div class="container-fluid px-4">

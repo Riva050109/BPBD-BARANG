@@ -39,38 +39,6 @@ class BarangController extends Controller
         return view('data-entry.barang.index', compact('barang'));
     }
 
-    public function store(Request $request)
-    {
-        $request->validate([
-            'bidang_kode' => 'required|exists:bidang,kode_bidang',
-            'kode_barang' => 'required|string|max:50|unique:barang,kode_barang',
-            'nama_barang' => 'required|string|max:255',
-            'jenis_barang' => 'required|in:pakai_habis,aset_tetap',
-            'kategori_id' => 'nullable|exists:kategori_barang,id',
-            'satuan' => 'required|string|max:50',
-            'stok' => 'required|integer|min:0',
-            'harga_satuan' => 'required|numeric|min:0',
-            'keterangan' => 'nullable|string'
-        ]);
-
-        Barang::create([
-            'bidang_kode' => $request->bidang_kode,
-            'kode_barang' => $request->kode_barang,
-            'nama_barang' => $request->nama_barang,
-            'jenis_barang' => $request->jenis_barang,
-            'kategori_id' => $request->kategori_id,
-            'satuan' => $request->satuan,
-            'stok' => $request->stok,
-            'harga_satuan' => $request->harga_satuan,
-            'keterangan' => $request->keterangan,
-            'is_active' => true
-        ]);
-
-        return redirect()
-            ->route('bidang.show', $request->bidang_kode)
-            ->with('success', 'Barang berhasil ditambahkan.');
-    }
-
     public function show($id)
     {
         $barang = Barang::with('kategori')->findOrFail($id);
@@ -196,4 +164,60 @@ class BarangController extends Controller
             ]
         ]);
     }
+
+    public function store(Request $request)
+{
+    $request->validate([
+        'bidang_kode' => 'required|exists:bidang,kode_bidang',
+        'nama_barang' => 'required|string|max:255',
+        'jenis_barang' => 'required|in:pakai_habis,aset_tetap',
+        'kategori_id' => 'nullable|exists:kategori_barang,id',
+        'satuan' => 'required|string|max:50',
+        'stok' => 'required|integer|min:0',
+        'harga_satuan' => 'required|numeric|min:0',
+        'keterangan' => 'nullable|string'
+    ]);
+
+    // ===============================
+    // MAP JENIS → KODE (DI SINI)
+    // ===============================
+    $jenisMap = [
+        'pakai_habis' => 'PH',
+        'aset_tetap'  => 'AT',
+    ];
+
+    $jenisKode = $jenisMap[$request->jenis_barang];
+
+    // ===============================
+    // GENERATE KODE BARANG OTOMATIS
+    // ===============================
+    $nomorUrut = Barang::where('bidang_kode', $request->bidang_kode)
+        ->where('jenis_barang', $request->jenis_barang)
+        ->count() + 1;
+
+    $nomor = str_pad($nomorUrut, 4, '0', STR_PAD_LEFT);
+
+    $kodeBarang = "{$request->bidang_kode}-{$jenisKode}-{$nomor}";
+
+    // ===============================
+    // SIMPAN BARANG
+    // ===============================
+    Barang::create([
+        'bidang_kode' => $request->bidang_kode,
+        'kode_barang' => $kodeBarang,
+        'nama_barang' => $request->nama_barang,
+        'jenis_barang' => $request->jenis_barang,
+        'kategori_id' => $request->kategori_id,
+        'satuan' => $request->satuan,
+        'stok' => $request->stok,
+        'harga_satuan' => $request->harga_satuan,
+        'keterangan' => $request->keterangan,
+        
+    ]);
+
+    return redirect()
+        ->route('bidang.show', $request->bidang_kode)
+        ->with('success', 'Barang berhasil ditambahkan dengan kode: ' . $kodeBarang);
+}
+
 }

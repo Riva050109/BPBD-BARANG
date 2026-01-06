@@ -11,8 +11,7 @@ return new class extends Migration
         Schema::create('barang_keluar', function (Blueprint $table) {
             $table->id();
             $table->date('tanggal_keluar');
-            $table->string('no_transaksi')->unique();
-            $table->enum('jenis_cv', ['sekretariat', 'pencegahan', 'kedaruratan', 'rehabilitasi']);
+            $table->enum('jenis_bidang', ['sekretariat', 'pencegahan', 'kedaruratan', 'rehabilitasi']);
             $table->foreignId('barang_id')->constrained('barang')->onDelete('cascade');
             $table->foreignId('kategori_id')->constrained('kategori_barang')->onDelete('cascade');
             $table->integer('jumlah');

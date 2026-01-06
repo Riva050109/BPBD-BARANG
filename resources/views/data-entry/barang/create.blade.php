@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Tambah Barang Masuk - Sistem Inventory')
-@section('icon', 'fa-sign-in-alt')
+@section('icon', '')
 
 @section('content')
 <div class="row justify-content-center">
@@ -16,7 +16,7 @@
                 </div>
             </div>
             
-            <div class="card-body p-4">
+            <div class="card-body p-4"> 
                 <form action="{{ route('barang-masuk.store') }}" method="POST" id="formBarangMasuk">
                     @csrf
                     
@@ -27,7 +27,7 @@
                                 <i class="fas fa-info-circle me-2"></i>Informasi Transaksi
                             </h5>
                         </div>
-                        
+                         
                         <!-- Tanggal Masuk -->
                         <div class="col-md-4">
                             <div class="mb-3">
@@ -66,7 +66,7 @@
         @enderror
     </div>
 </div>
-                        
+                
                         <!-- Jenis Barang -->
                         <div class="col-md-4">
                             <div class="mb-3">
@@ -101,7 +101,7 @@
                                 @error('kode_barang')
                                     <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
-                                <small class="text-muted">Format: [BIDANG]-[JENIS]-[NOMOR]</small>
+                                    
                             </div>
                         </div>
                     </div>
@@ -300,274 +300,64 @@
 
 @push('scripts')
 <script>
-    // Format Rupiah helper functions
     function formatRupiah(angka) {
         if (!angka) return '0';
-        const number_string = angka.toString().replace(/[^,\d]/g, '');
-        const split = number_string.split(',');
-        const sisa = split[0].length % 3;
-        let rupiah = split[0].substr(0, sisa);
-        const ribuan = split[0].substr(sisa).match(/\d{3}/gi);
-        
-        if (ribuan) {
-            const separator = sisa ? '.' : '';
-            rupiah += separator + ribuan.join('.');
-        }
-        
-        return rupiah;
+        return angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
     }
-    
-    function unformatRupiah(rupiah) {
-        if (!rupiah) return 0;
-        return parseInt(rupiah.toString().replace(/\./g, ''), 10) || 0;
-    }
-    
-    // Format input functions
+
     function formatHarga(input) {
         let value = input.value.replace(/[^\d]/g, '');
-        const numericValue = parseInt(value) || 0;
-        
-        document.getElementById('harga_satuan_numeric').value = numericValue;
+        document.getElementById('harga_satuan_numeric').value = value || 0;
         input.value = formatRupiah(value);
-        
         calculateTotal();
     }
-    
+
     function formatJumlah(input) {
         let value = input.value.replace(/[^\d]/g, '');
-        const numericValue = parseInt(value) || 0;
-        
-        document.getElementById('jumlah_numeric').value = numericValue;
+        document.getElementById('jumlah_numeric').value = value || 0;
         input.value = formatRupiah(value);
-        
         calculateTotal();
     }
-    
-    // Calculate total
+
     function calculateTotal() {
         const jumlah = parseInt(document.getElementById('jumlah_numeric').value) || 0;
         const harga = parseInt(document.getElementById('harga_satuan_numeric').value) || 0;
         const total = jumlah * harga;
-        
-        // Format display
-        document.getElementById('total_nilai_display').value = formatRupiah(total);
+
         document.getElementById('total_nilai').value = total;
-        
-        // Update text display
-        document.getElementById('total_nilai_text').innerText = 
-            `Rp ${formatRupiah(total)}`;
-        
-        document.getElementById('total_detail').innerText = 
+        document.getElementById('total_nilai_display').value = formatRupiah(total);
+        document.getElementById('total_nilai_text').innerText = `Rp ${formatRupiah(total)}`;
+        document.getElementById('total_detail').innerText =
             `Jumlah: ${formatRupiah(jumlah)} × Harga: Rp ${formatRupiah(harga)}`;
     }
-    
-    // Update kode barang otomatis
+
     function updateKodeBarang() {
         const bidang = document.getElementById('bidang_kode').value;
         const jenis = document.getElementById('jenis_barang').value;
-        const kodeBarangInput = document.getElementById('kode_barang');
-        
+        const kodeInput = document.getElementById('kode_barang');
+
         if (bidang && jenis) {
-            // Generate kode berdasarkan bidang dan jenis
-            let jenisCode = '';
-            if (jenis === 'pakai_habis') {
-                jenisCode = 'PH';
-            } else if (jenis === 'aset_tetap') {
-                jenisCode = 'AT';
-            }
-            
-            const timestamp = Date.now().toString().slice(-4);
-            kodeBarangInput.value = `${bidang}-${jenisCode}-${timestamp}`;
+            const jenisKode = jenis === 'pakai_habis' ? 'PH' : 'AT';
+            const random = Math.floor(1000 + Math.random() * 9000);
+            kodeInput.value = `${bidang}-${jenisKode}-${random}`;
         }
     }
-    
-    // Load barang berdasarkan bidang
-    function loadBarangByBidang() {
-        const bidangKode = document.getElementById('bidang_kode').value;
-        const barangSelect = document.getElementById('barang_id');
-        
-        if (!bidangKode) return;
-        
-        // Clear existing options except first and last
-        while (barangSelect.options.length > 2) {
-            barangSelect.remove(1);
-        }
-        
-        // Load via AJAX
-        fetch(`/barang-by-bidang/${bidangKode}`)
-            .then(response => response.json())
-            .then(data => {
-                data.forEach(barang => {
-                    const option = document.createElement('option');
-                    option.value = barang.id;
-                    option.setAttribute('data-kode', barang.kode_barang);
-                    option.setAttribute('data-nama', barang.nama_barang);
-                    option.setAttribute('data-satuan', barang.satuan);
-                    option.setAttribute('data-harga', barang.harga_satuan);
-                    option.setAttribute('data-kategori', barang.kategori_nama);
-                    option.setAttribute('data-jenis', barang.jenis_barang);
-                    option.textContent = `${barang.kode_barang} - ${barang.nama_barang}`;
-                    barangSelect.insertBefore(option, barangSelect.lastChild);
-                });
-            })
-            .catch(error => console.error('Error:', error));
-    }
-    
-    // Load barang detail when selected
-    function loadBarangDetail() {
-        const barangSelect = document.getElementById('barang_id');
-        const selectedOption = barangSelect.options[barangSelect.selectedIndex];
-        
-        if (selectedOption.value === 'new') {
-            // Mode tambah barang baru
-            enableNewBarangMode();
-            updateKodeBarang();
-            return;
-        }
-        
-        if (selectedOption.value) {
-            // Mode pilih barang yang ada
-            const kode = selectedOption.getAttribute('data-kode');
-            const nama = selectedOption.getAttribute('data-nama');
-            const satuan = selectedOption.getAttribute('data-satuan');
-            const harga = selectedOption.getAttribute('data-harga');
-            const kategori = selectedOption.getAttribute('data-kategori');
-            const jenis = selectedOption.getAttribute('data-jenis');
-            
-            // Isi form dengan data barang
-            document.getElementById('kode_barang').value = kode;
-            document.getElementById('nama_barang').value = nama;
-            document.getElementById('satuan').value = satuan;
-            document.getElementById('kategori_barang').value = kategori;
-            document.getElementById('jenis_barang').value = jenis;
-            
-            // Format harga
-            document.getElementById('harga_satuan_numeric').value = harga;
-            document.getElementById('harga_satuan').value = formatRupiah(harga);
-            
-            // Disable beberapa field untuk editing
-            document.getElementById('kode_barang').readOnly = true;
-            document.getElementById('nama_barang').readOnly = false;
-            document.getElementById('satuan').readOnly = false;
-            document.getElementById('kategori_barang').readOnly = false;
-            document.getElementById('jenis_barang').disabled = false;
-        }
-    }
-    
-    function enableNewBarangMode() {
-        // Enable semua field untuk input baru
-        document.getElementById('kode_barang').readOnly = false;
-        document.getElementById('nama_barang').readOnly = false;
-        document.getElementById('satuan').readOnly = false;
-        document.getElementById('kategori_barang').readOnly = false;
-        document.getElementById('jenis_barang').disabled = false;
-        
-        // Clear form
-        document.getElementById('nama_barang').value = '';
-        document.getElementById('satuan').value = '';
-        document.getElementById('kategori_barang').value = '';
-        document.getElementById('harga_satuan').value = '';
-        document.getElementById('harga_satuan_numeric').value = '';
-        document.getElementById('jumlah').value = '';
-        document.getElementById('jumlah_numeric').value = '';
-        
-        // Reset kode barang jika bidang dan jenis sudah dipilih
-        updateKodeBarang();
-    }
-    
-    // Kategori functions
-    function suggestKategori() {
-        const suggestionDiv = document.getElementById('kategoriSuggestion');
-        suggestionDiv.style.display = suggestionDiv.style.display === 'none' ? 'block' : 'none';
-    }
-    
-    function setKategori(kategori) {
-        document.getElementById('kategori_barang').value = kategori;
-        document.getElementById('kategoriSuggestion').style.display = 'none';
-        
-        // Auto set jenis berdasarkan kategori
-        const jenisSelect = document.getElementById('jenis_barang');
-        const lowerKategori = kategori.toLowerCase();
-        
-        if (lowerKategori.includes('atk') || lowerKategori.includes('konsumsi') || lowerKategori.includes('logistik')) {
-            jenisSelect.value = 'pakai_habis';
-        } else if (lowerKategori.includes('elektronik') || lowerKategori.includes('furniture')) {
-            jenisSelect.value = 'aset_tetap';
-        }
-        
-        updateKodeBarang();
-    }
-    
-    // Form validation
-    document.getElementById('formBarangMasuk').addEventListener('submit', function(e) {
+
+    document.getElementById('formBarangMasuk').addEventListener('submit', function (e) {
         const jumlah = parseInt(document.getElementById('jumlah_numeric').value) || 0;
         const harga = parseInt(document.getElementById('harga_satuan_numeric').value) || 0;
-        const barangSelect = document.getElementById('barang_id');
-        const selectedOption = barangSelect.options[barangSelect.selectedIndex];
-        
-        // Validasi jumlah
+
         if (jumlah <= 0) {
             e.preventDefault();
             alert('Jumlah harus lebih dari 0');
-            document.getElementById('jumlah').focus();
             return false;
         }
-        
-        // Validasi harga
+
         if (harga < 0) {
             e.preventDefault();
-            alert('Harga tidak boleh negatif');
-            document.getElementById('harga_satuan').focus();
+            alert('Harga tidak valid');
             return false;
         }
-        
-        // Jika pilih barang baru, validasi field tambahan
-        if (selectedOption.value === 'new') {
-            const kodeBarang = document.getElementById('kode_barang').value;
-            const namaBarang = document.getElementById('nama_barang').value;
-            const satuan = document.getElementById('satuan').value;
-            const kategori = document.getElementById('kategori_barang').value;
-            
-            if (!kodeBarang || !namaBarang || !satuan || !kategori) {
-                e.preventDefault();
-                alert('Harap lengkapi semua field untuk barang baru');
-                return false;
-            }
-            
-            // Validasi format kode barang
-            if (!/^[A-Z]{3}-[A-Z]{2}-\d{4}$/.test(kodeBarang)) {
-                e.preventDefault();
-                alert('Format kode barang tidak valid. Contoh: SKT-PH-0012');
-                return false;
-            }
-        }
-    });
-    
-    // Initialize on page load
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initialize tooltips
-        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl);
-        });
-        
-        // Load barang jika sudah dipilih sebelumnya
-        const barangId = document.getElementById('barang_id');
-        if (barangId.value) {
-            loadBarangDetail();
-        }
-        
-        // Generate kode barang jika bidang dan jenis sudah dipilih
-        const bidang = document.getElementById('bidang_kode').value;
-        const jenis = document.getElementById('jenis_barang').value;
-        const kodeBarang = document.getElementById('kode_barang').value;
-        
-        if (bidang && jenis && !kodeBarang) {
-            updateKodeBarang();
-        }
-        
-        // Initial calculate
-        calculateTotal();
     });
 </script>
 @endpush

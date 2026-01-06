@@ -7,34 +7,39 @@ use Illuminate\Database\Eloquent\Model;
 class Barang extends Model
 {
     protected $table = 'barang';
-    
-    protected $fillable = [
-        'kode_barang',
-        'nama_barang',
-        'kategori_id',
-        'satuan_id', // atau 'satuan' jika pakai string
-        'kategori_barang',
-        'stok',
-        'harga_satuan',
-    
-        'keterangan',
-        'status'
-    ];
-    
+
+   protected $fillable = [
+    'bidang_kode',
+    'kode_barang',
+    'nama_barang',
+    'jenis_barang',
+    'kategori_id',
+    'satuan',
+    'stok',
+    'harga_satuan',
+    'keterangan',
+];
+
+
     protected $casts = [
-        'status' => 'boolean',
+        'is_active' => 'boolean',
         'harga_satuan' => 'decimal:2'
     ];
-    
-    // Relasi ke Kategori
+
+    // ================= RELASI =================
+
     public function kategori()
     {
         return $this->belongsTo(KategoriBarang::class, 'kategori_id');
     }
-    
-    // Relasi ke Satuan (jika ada model Satuan)
-    public function satuan()
+
+    public function barangMasuk()
     {
-        return $this->belongsTo(Satuan::class, 'satuan_id');
+        return $this->hasMany(BarangMasuk::class);
+    }
+
+    public function barangKeluar()
+    {
+        return $this->hasMany(BarangKeluar::class);
     }
 }

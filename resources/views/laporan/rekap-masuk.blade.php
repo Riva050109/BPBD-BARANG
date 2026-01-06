@@ -29,7 +29,7 @@
             <div class="card-body">
                 <form action="{{ route('laporan.rekap-masuk') }}" method="GET">
                     <div class="row">
-                        <div class="col-md-4">
+                        <div class="col-md-4"> 
                             <label class="form-label">Tanggal Mulai</label>
                             <input type="date" name="start_date" class="form-control"
                                    value="{{ $start_date }}">

@@ -2,16 +2,14 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Bidang extends Model
 {
-    use HasFactory;
-
-    protected $primaryKey = 'kode'; // Primary key adalah 'kode', bukan 'id'
-    public $incrementing = false; // Karena primary key bukan auto-increment
-    protected $keyType = 'string'; // Tipe data primary key adalah string
+    protected $table = 'bidangs'; // ⬅️ PENTING
+    protected $primaryKey = 'kode';
+    public $incrementing = false;
+    protected $keyType = 'string';
 
     protected $fillable = [
         'kode',
@@ -21,9 +19,5 @@ class Bidang extends Model
         'icon',
         'color',
         'aktif'
-    ];
-
-    protected $casts = [
-        'aktif' => 'boolean'
     ];
 }

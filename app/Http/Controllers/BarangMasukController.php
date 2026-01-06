@@ -28,10 +28,11 @@ class BarangMasukController extends Controller
 
         // Filter bidang
         if ($request->filled('bidang')) {
-            $query->whereHas('barang', function ($q) use ($request) {
-                $q->where('bidang_kode', $request->bidang);
-            });
-        }
+    $query->whereHas('barang', function ($q) use ($request) {
+        $q->where('bidang_kode', $request->bidang);
+    });
+}
+
 
         $barangMasuk = $query
             ->orderBy('tanggal_masuk', 'desc')
@@ -119,30 +120,32 @@ class BarangMasukController extends Controller
      * UPDATE – UPDATE DATA
      * =============================
      */
-    public function update(Request $request, $id)
-    {
-        $barangMasuk = BarangMasuk::with('barang')->findOrFail($id);
+   public function update(Request $request, $id)
+{
+    $barangMasuk = BarangMasuk::with('barang')->findOrFail($id);
 
-        $validated = $request->validate([
-            'tanggal_masuk' => 'required|date',
-            'jumlah' => 'required|integer|min:1',
-            'harga_satuan' => 'required|integer|min:0',
-            'total_nilai' => 'required|integer|min:0',
-            'keterangan' => 'nullable|string',
-        ]);
+    $validated = $request->validate([
+        'tanggal_masuk' => 'required|date',
+        'jumlah' => 'required|integer|min:1',
+        'harga_satuan' => 'required|integer|min:0',
+        'total_nilai' => 'required|integer|min:0',
+        'keterangan' => 'nullable|string',
+    ]);
 
-        // Hitung selisih stok
-        $selisih = $validated['jumlah'] - $barangMasuk->jumlah;
-        $barangMasuk->barang->stok += $selisih;
-        $barangMasuk->barang->save();
+    // Hitung selisih stok
+    $selisih = $validated['jumlah'] - $barangMasuk->jumlah;
 
-        // Update transaksi
-        $barangMasuk->update($validated);
+    $barangMasuk->barang->stok += $selisih;
+    $barangMasuk->barang->save();
 
-        return redirect()
-            ->route('barang-masuk.index')
-            ->with('success', 'Data barang masuk berhasil diperbarui');
-    }
+    // Update transaksi
+    $barangMasuk->update($validated);
+
+    return redirect()
+        ->route('barang-masuk.index')
+        ->with('success', 'Data barang masuk berhasil diperbarui');
+}
+
 
     /**
      * =============================

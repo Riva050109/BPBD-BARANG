@@ -6,22 +6,19 @@ use Illuminate\Database\Eloquent\Model;
 
 class BarangKeluar extends Model
 {
-    protected $table = 'barang_keluar'; // Nama tabel di database
+    protected $table = 'barang_keluar'; // Tambahkan ini
     
     protected $fillable = [
-        'kode_transaksi',
         'barang_id',
-        'jumlah',
         'tanggal_keluar',
-        'penerima',
-        'keterangan'
+        'jumlah',
+        'keterangan',
+        'user_id'
+        // sesuaikan dengan kolom migration
     ];
 
-    /**
-     * Relasi ke Barang
-     */
     public function barang()
     {
-        return $this->belongsTo(Barang::class, 'barang_id');
+        return $this->belongsTo(Barang::class);
     }
 }
