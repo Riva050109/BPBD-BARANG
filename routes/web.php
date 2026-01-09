@@ -138,7 +138,7 @@ Route::prefix('barang-masuk')->name('barang-masuk.')->group(function () {
     // ======================
     // LAPORAN
     // ======================
-   Route::middleware(['admin'])->prefix('laporan')->name('laporan.')->group(function () {
+   Route::middleware(['auth','admin'])->prefix('laporan')->name('laporan.')->group(function () {
         // Stok
         Route::get('/stok', [LaporanController::class, 'laporanStok'])->name('stok');
         Route::get('/stok/export', [LaporanController::class, 'exportStok'])->name('stok.export');
@@ -238,6 +238,11 @@ Route::prefix('barang-masuk')->name('barang-masuk.')->group(function () {
         // Laporan data
         Route::get('/laporan/stok', [LaporanController::class, 'getStokData'])->name('laporan.stok-data');
     });
+
+
+
+Route::get('/barang/by-kode/{kode}', [BarangController::class, 'byKode']);
+
 
     // ======================
     // UTILITY ROUTES

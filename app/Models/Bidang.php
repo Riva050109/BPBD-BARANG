@@ -20,4 +20,17 @@ class Bidang extends Model
         'color',
         'aktif'
     ];
+
+    public function barang()
+{
+    return $this->hasMany(Barang::class, 'bidang_kode', 'kode');
+}
+
+
+public function index()
+{
+    $bidangs = Bidang::withCount('barang')->get();
+
+    return view('data-entry.barang.index', compact('bidangs'));
+}
 }

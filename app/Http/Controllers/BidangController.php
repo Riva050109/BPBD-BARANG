@@ -11,50 +11,17 @@ class BidangController extends Controller
     /**
      * Halaman Index Semua Bidang
      */
-    public function index()
-    {
-        // Pastikan tabel & kolom tersedia
-        $hasBidangKode = Schema::hasColumn('barangs', 'bidang_kode');
 
-        // Jika kolom belum ada, kembalikan nol semua
-        if (!$hasBidangKode) {
-            return view('data-entry.barang.index', [
-                'totalBarangSekretariat'  => 0,
-                'totalBarangPencegahan'   => 0,
-                'totalBarangKedaruratan'  => 0,
-                'totalBarangRehabilitasi' => 0,
-                'totalNilaiSekretariat'   => 0,
-                'totalNilaiPencegahan'    => 0,
-                'totalNilaiKedaruratan'   => 0,
-                'totalNilaiRehabilitasi'  => 0,
-                'hasBidangKode'           => false
-            ]);
-        }
+public function index()
+{
+    $bidangs = Bidang::withCount('barang')
+        ->withSum(['barang as total_nilai' => function ($q) {
+            $q->select(\DB::raw('SUM(stok * harga_satuan)'));
+        }], 'total_nilai')
+        ->get();
 
-        // Hitung jumlah barang per bidang
-        $totalBarangSekretariat  = Barang::where('bidang_kode', 'SKT')->count();
-        $totalBarangPencegahan   = Barang::where('bidang_kode', 'PKP')->count();
-        $totalBarangKedaruratan  = Barang::where('bidang_kode', 'KDL')->count();
-        $totalBarangRehabilitasi = Barang::where('bidang_kode', 'RR')->count();
-
-        // Hitung total nilai
-        $totalNilaiSekretariat  = $this->hitungTotalNilai('SKT');
-        $totalNilaiPencegahan   = $this->hitungTotalNilai('PKP');
-        $totalNilaiKedaruratan  = $this->hitungTotalNilai('KDL');
-        $totalNilaiRehabilitasi = $this->hitungTotalNilai('RR');
-
-        return view('data-entry.barang.index', compact(
-            'totalBarangSekretariat',
-            'totalBarangPencegahan',
-            'totalBarangKedaruratan',
-            'totalBarangRehabilitasi',
-            'totalNilaiSekretariat',
-            'totalNilaiPencegahan',
-            'totalNilaiKedaruratan',
-            'totalNilaiRehabilitasi',
-            'hasBidangKode'
-        ));
-    }
+    return view('data-entry.barang.index', compact('bidangs'));
+}
 
     /**
      * Halaman Detail per Bidang

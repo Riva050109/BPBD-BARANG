@@ -26,79 +26,130 @@
                         @error('tanggal_masuk')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
 
-                    <!-- Kode Barang -->
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Kode Barang <span class="text-danger">*</span></label>
-                        <input type="text" name="kode_barang" id="kode_barang"
-                               class="form-control @error('kode_barang') is-invalid @enderror"
-                               placeholder="Contoh: SKT-PH-0012"
-                               onblur="cariBarang()" required>
-                        @error('kode_barang')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                        <small class="text-muted">Ketik kode barang → otomatis ambil data</small>
-                    </div>
+    <label class="form-label">Nama Barang *</label>
+    <select name="barang_id" class="form-control" required>
+        <option value="">-- Pilih Barang --</option>
+        @foreach ($barang as $b)
+            <option value="{{ $b->id }}">
+                {{ $b->nama_barang }}
+            </option>
+        @endforeach
+    </select>
+</div>
+
 
                     <!-- Info Barang -->
                     <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-semibold">Jenis Barang <span class="text-danger">*</span></label>
+                            <select name="jenis_barang" class="form-control @error('jenis_barang') is-invalid @enderror" required>
+                                <option value="">Pilih Jenis</option>
+                                <option value="tetap" {{ old('jenis_barang') == 'tetap' ? 'selected' : '' }}>Tetap</option>
+                                <option value="habis_pakai" {{ old('jenis_barang') == 'habis_pakai' ? 'selected' : '' }}>Habis Pakai</option>
+                            </select>
+                            @error('jenis_barang')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-semibold">Bidang</label>
+                            <select name="bidang_kode" class="form-control @error('bidang_kode') is-invalid @enderror">
+                                <option value="">Pilih Bidang</option>
+                                @php
+                                    // Ambil data bidang langsung di view
+                                    $bidangs = \App\Models\Bidang::orderBy('nama')->get();
+                                @endphp
+                                @foreach($bidangs as $bidang)
+                                    <option value="{{ $bidang->kode }}" {{ old('bidang_kode') == $bidang->kode ? 'selected' : '' }}>
+                                        {{ $bidang->nama }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('bidang_kode')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-semibold">Kategori</label>
+                            <input type="text" name="kategori"
+                                   class="form-control @error('kategori') is-invalid @enderror"
+                                   value="{{ old('kategori') }}"
+                                   placeholder="Contoh: Elektronik, Kantor, dll">
+                            @error('kategori')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                    </div>
+
+                    <!-- Kode Barang -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Kode Barang</label>
+                        <input type="text" name="kode_barang"
+                               class="form-control @error('kode_barang') is-invalid @enderror"
+                               value="{{ old('kode_barang') }}"
+                               placeholder="Contoh: SKT-PH-0012">
+                        @error('kode_barang')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+
+                    <!-- Jumlah dan Satuan -->
+                    <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Nama Barang</label>
-                            <input type="text" id="nama_barang" class="form-control" readonly>
+                            <label class="form-label fw-semibold">Jumlah <span class="text-danger">*</span></label>
+                            <input type="number" name="jumlah_numeric" id="jumlah"
+                                   class="form-control @error('jumlah_numeric') is-invalid @enderror"
+                                   value="{{ old('jumlah_numeric') }}"
+                                   min="1" oninput="hitungTotal()" required>
+                            @error('jumlah_numeric')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
-                        <!-- Jenis & Bidang -->
-<div class="row">
-    <div class="col-md-6 mb-3">
-        <label class="form-label fw-semibold">Jenis Barang</label>
-        <input type="text" id="jenis_barang"
-               class="form-control bg-light"
-               readonly>
-        <input type="hidden" name="jenis_barang" value="tetap">
-    </div>
 
-    <div class="col-md-6 mb-3">
-        <label class="form-label fw-semibold">Bidang</label>
-        <input type="text" id="bidang"
-               class="form-control bg-light"
-               readonly>
-        <input type="hidden" name="bidang_kode" id="bidang_kode">
-    </div>
-</div>
-
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label">Satuan</label>
-                            <input type="text" id="satuan" class="form-control" readonly>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label">Kategori</label>
-                            <input type="text" id="kategori" class="form-control" readonly>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Satuan <span class="text-danger">*</span></label>
+                            <select name="satuan" class="form-control @error('satuan') is-invalid @enderror" required>
+                                <option value="">Pilih Satuan</option>
+                                <option value="Pcs" {{ old('satuan') == 'Pcs' ? 'selected' : '' }}>Pcs</option>
+                                <option value="Unit" {{ old('satuan') == 'Unit' ? 'selected' : '' }}>Unit</option>
+                                <option value="Set" {{ old('satuan') == 'Set' ? 'selected' : '' }}>Set</option>
+                                <option value="Pak" {{ old('satuan') == 'Pak' ? 'selected' : '' }}>Pak</option>
+                                <option value="Lembar" {{ old('satuan') == 'Lembar' ? 'selected' : '' }}>Lembar</option>
+                                <option value="Botol" {{ old('satuan') == 'Botol' ? 'selected' : '' }}>Botol</option>
+                                <option value="Dus" {{ old('satuan') == 'Dus' ? 'selected' : '' }}>Dus</option>
+                                <option value="Rim" {{ old('satuan') == 'Rim' ? 'selected' : '' }}>Rim</option>
+                                <option value="Roll" {{ old('satuan') == 'Roll' ? 'selected' : '' }}>Roll</option>
+                                <option value="Meter" {{ old('satuan') == 'Meter' ? 'selected' : '' }}>Meter</option>
+                            </select>
+                            @error('satuan')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                     </div>
 
-                    <!-- Jumlah -->
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Jumlah <span class="text-danger">*</span></label>
-                        <input type="number" name="jumlah_numeric" id="jumlah"
-                               class="form-control @error('jumlah_numeric') is-invalid @enderror"
-                               min="1" oninput="hitungTotal()" required>
-                        @error('jumlah_numeric')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                    </div>
+                    <!-- Harga dan Total -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Harga Satuan (Rp) <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">Rp</span>
+                                <input type="number" name="harga_satuan_numeric" id="harga"
+                                       class="form-control @error('harga_satuan_numeric') is-invalid @enderror"
+                                       value="{{ old('harga_satuan_numeric') }}"
+                                       min="0" oninput="hitungTotal()" required>
+                                @error('harga_satuan_numeric')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                            <small class="text-muted">Harga per satuan barang</small>
+                        </div>
 
-                    <!-- Harga -->
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Harga Satuan (Rp)</label>
-                        <input type="number" name="harga_satuan_numeric" id="harga"
-                               class="form-control" min="0" oninput="hitungTotal()">
-                    </div>
-
-                    <!-- Total -->
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Total Nilai</label>
-                        <input type="text" id="total_display" class="form-control bg-light" readonly>
-                        <input type="hidden" name="total_nilai" id="total">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Total Nilai (Rp)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">Rp</span>
+                                <input type="text" id="total_display" class="form-control bg-light" readonly>
+                            </div>
+                            <input type="hidden" name="total_nilai" id="total">
+                            <small class="text-muted">Jumlah × Harga Satuan</small>
+                        </div>
                     </div>
 
                     <!-- Keterangan -->
                     <div class="mb-4">
                         <label class="form-label">Keterangan</label>
-                        <textarea name="keterangan" class="form-control" rows="3"></textarea>
+                        <textarea name="keterangan" class="form-control @error('keterangan') is-invalid @enderror" 
+                                  rows="3" placeholder="Tambahkan catatan jika diperlukan">{{ old('keterangan') }}</textarea>
+                        @error('keterangan')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
 
                     <!-- Aksi -->
@@ -115,38 +166,28 @@
         </div>
     </div>
 </div>
-@endsection
 
 <script>
-function cariBarang() {
-    const kode = document.getElementById('kode_barang').value.trim();
-    if (!kode) return;
-
-    fetch(`/api/barang/by-kode/${kode}`)
-        .then(res => res.json())
-        .then(res => {
-            if (!res.success) throw res;
-
-            document.getElementById('nama_barang').value = res.data.nama_barang;
-            document.getElementById('satuan').value = res.data.satuan;
-            document.getElementById('kategori').value = res.data.kategori;
-            document.getElementById('harga').value = res.data.harga_satuan || 0;
-
-            // ✅ BARU
-            document.getElementById('bidang').value = res.data.bidang_nama;
-            document.getElementById('bidang_kode').value = res.data.bidang_kode;
-
-            hitungTotal();
-        })
-        .catch(() => {
-            alert('Barang tidak ditemukan');
-
-            document.getElementById('nama_barang').value = '';
-            document.getElementById('satuan').value = '';
-            document.getElementById('kategori').value = '';
-            document.getElementById('harga').value = 0;
-            document.getElementById('bidang').value = '';
-            document.getElementById('bidang_kode').value = '';
-        });
+function hitungTotal() {
+    const jumlah = parseFloat(document.getElementById('jumlah').value) || 0;
+    const harga = parseFloat(document.getElementById('harga').value) || 0;
+    const total = jumlah * harga;
+    
+    document.getElementById('total').value = total;
+    document.getElementById('total_display').value = formatRupiah(total);
 }
+
+function formatRupiah(angka) {
+    return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 0
+    }).format(angka);
+}
+
+// Hitung total saat halaman dimuat
+document.addEventListener('DOMContentLoaded', function() {
+    hitungTotal();
+});
 </script>
+@endsection

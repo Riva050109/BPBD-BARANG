@@ -11,35 +11,32 @@ use Illuminate\Http\Request;
 
 class BarangController extends Controller
 {
-  public function create()
+ 
+public function create()
 {
-    $bidang = Bidang::all();
-    $bidangKode = request('bidang');
-
+    $bidangs = Bidang::all();
     $kategories = KategoriBarang::all();
     $jenisBarang = JenisBarang::all();
     $satuan = Satuan::all();
 
-    // 🔧 FIX ERROR: barang dikirim (kosong)
-    $barang = collect();
-
     return view('data-entry.barang.create', compact(
-        'bidang',
-        'bidangKode',
+        'bidangs',
         'kategories',
         'jenisBarang',
-        'satuan',
-        'barang'
+        'satuan'
     ));
 }
 
- public function index()
-    {
-        $barang = Barang::all(); // atau paginate
-        return view('data-entry.barang.index', compact('barang'));
-    }
 
-    public function show($id)
+
+
+public function index()
+{
+    $bidangs = Bidang::all();
+
+    return view('data-entry.barang.index', compact('bidangs'));
+}
+    public function show($id)   
     {
         $barang = Barang::with('kategori')->findOrFail($id);
 
@@ -138,86 +135,78 @@ class BarangController extends Controller
             ->get();
     }
 
-    public function getByKode($kode)
-    {
-        $barang = Barang::with('kategori')
-            ->where('kode_barang', $kode)
-            ->first();
+public function byKode($kode)
+{
+    $barang = Barang::with(['satuan', 'kategori', 'bidang'])
+        ->where('kode_barang', $kode)
+        ->first();
 
-        if (!$barang) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Barang tidak ditemukan'
-            ], 404);
-        }
-
+    if (!$barang) {
         return response()->json([
-            'success' => true,
-            'data' => [
-                'id' => $barang->id,
-                'kode_barang' => $barang->kode_barang,
-                'nama_barang' => $barang->nama_barang,
-                'satuan' => $barang->satuan,
-                'kategori' => $barang->kategori->nama_kategori ?? '',
-                'jenis_barang' => $barang->jenis_barang,
-                'harga_satuan' => $barang->harga_satuan,
-            ]
-        ]);
+            'success' => false,
+            'message' => 'Barang tidak ditemukan'
+        ], 404);
     }
 
+    return response()->json([
+        'success' => true,
+        'data' => [
+            'id' => $barang->id, // ⬅️ INI PENTING
+            'nama_barang' => $barang->nama_barang,
+            'satuan' => $barang->satuan->nama,
+            'kategori' => $barang->kategori->nama,
+            'harga_satuan' => $barang->harga_satuan,
+            'bidang_kode' => $barang->bidang->kode,
+            'bidang_nama' => $barang->bidang->nama,
+        ]
+    ]);
+}
     public function store(Request $request)
 {
     $request->validate([
-        'bidang_kode' => 'required|exists:bidang,kode_bidang',
+        'bidang_kode' => 'required|exists:bidang,kode',
         'nama_barang' => 'required|string|max:255',
         'jenis_barang' => 'required|in:pakai_habis,aset_tetap',
-        'kategori_id' => 'nullable|exists:kategori_barang,id',
+        'kategori_barang' => 'required|string|max:100',
         'satuan' => 'required|string|max:50',
-        'stok' => 'required|integer|min:0',
+        'jumlah' => 'required|integer|min:1',
         'harga_satuan' => 'required|numeric|min:0',
         'keterangan' => 'nullable|string'
     ]);
 
-    // ===============================
-    // MAP JENIS → KODE (DI SINI)
-    // ===============================
+    // map jenis
     $jenisMap = [
         'pakai_habis' => 'PH',
         'aset_tetap'  => 'AT',
     ];
 
-    $jenisKode = $jenisMap[$request->jenis_barang];
-
-    // ===============================
-    // GENERATE KODE BARANG OTOMATIS
-    // ===============================
     $nomorUrut = Barang::where('bidang_kode', $request->bidang_kode)
         ->where('jenis_barang', $request->jenis_barang)
         ->count() + 1;
 
-    $nomor = str_pad($nomorUrut, 4, '0', STR_PAD_LEFT);
+    $kodeBarang = sprintf(
+        '%s-%s-%04d',
+        $request->bidang_kode,
+        $jenisMap[$request->jenis_barang],
+        $nomorUrut
+    );
 
-    $kodeBarang = "{$request->bidang_kode}-{$jenisKode}-{$nomor}";
-
-    // ===============================
-    // SIMPAN BARANG
-    // ===============================
     Barang::create([
         'bidang_kode' => $request->bidang_kode,
         'kode_barang' => $kodeBarang,
         'nama_barang' => $request->nama_barang,
         'jenis_barang' => $request->jenis_barang,
-        'kategori_id' => $request->kategori_id,
+        'kategori_barang' => $request->kategori_barang,
         'satuan' => $request->satuan,
-        'stok' => $request->stok,
+        'stok' => $request->jumlah, // 🔥 PENTING
         'harga_satuan' => $request->harga_satuan,
         'keterangan' => $request->keterangan,
-        
     ]);
 
     return redirect()
-        ->route('bidang.show', $request->bidang_kode)
-        ->with('success', 'Barang berhasil ditambahkan dengan kode: ' . $kodeBarang);
+        ->route('barang-masuk.index')
+        ->with('success', 'Barang masuk berhasil disimpan');
 }
+
 
 }

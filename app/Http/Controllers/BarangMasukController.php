@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Barang;
 use App\Models\BarangMasuk;
+use Illuminate\Support\Facades\DB;
 use App\Models\Bidang;
 use Illuminate\Http\Request;
 
@@ -48,50 +49,48 @@ class BarangMasukController extends Controller
      * CREATE – FORM BARANG MASUK
      * =============================
      */
-    public function create()
-    {
-        $bidang = Bidang::all();
-        return view('data-entry.barang-masuk.create', compact('bidang'));
-    }
+   public function create()
+{
+    $bidang = Bidang::all();
+    $barang = Barang::orderBy('kode_barang')->get();
+
+    return view('data-entry.barang-masuk.create', compact('bidang', 'barang'));
+}
 
     /**
      * =============================
      * STORE – SIMPAN BARANG MASUK
      * =============================
      */
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'tanggal_masuk' => 'required|date',
-            'kode_barang' => 'required|exists:barang,kode_barang',
-            'jumlah_numeric' => 'required|integer|min:1',
-            'harga_satuan_numeric' => 'required|integer|min:0',
-            'total_nilai' => 'required|integer|min:0',
-            'keterangan' => 'nullable|string',
-        ]);
+  public function store(Request $request)
+{
+    $request->validate([
+        'barang_id'     => 'required|exists:barang,id',
+        'tanggal_masuk' => 'required|date',
+        'jumlah'        => 'required|integer|min:1',
+        'harga_satuan'  => 'required|numeric|min:0',
+    ]);
 
-        // Ambil barang berdasarkan kode
-        $barang = Barang::where('kode_barang', $validated['kode_barang'])->firstOrFail();
+    DB::transaction(function () use ($request) {
 
-        // Tambah stok
-        $barang->stok += $validated['jumlah_numeric'];
-        $barang->save();
-
-        // Simpan transaksi barang masuk
         BarangMasuk::create([
-            'barang_id' => $barang->id,
-            'tanggal_masuk' => $validated['tanggal_masuk'],
-            'jumlah' => $validated['jumlah_numeric'],
-            'harga_satuan' => $validated['harga_satuan_numeric'],
-            'total_nilai' => $validated['total_nilai'],
-            'keterangan' => $validated['keterangan'],
-            'user_id' => auth()->id(),
+            'barang_id'     => $request->barang_id,
+            'tanggal_masuk' => $request->tanggal_masuk,
+            'jumlah'        => $request->jumlah,
+            'harga_satuan'  => $request->harga_satuan,
+            'keterangan'    => $request->keterangan,
         ]);
 
-        return redirect()
-            ->route('barang-masuk.index')
-            ->with('success', 'Barang masuk berhasil dicatat');
-    }
+        $barang = Barang::findOrFail($request->barang_id);
+        $barang->increment('stok', $request->jumlah);
+    });
+
+    return redirect()
+        ->route('barang-masuk.index')
+        ->with('success', 'Barang masuk berhasil disimpan');
+}
+
+
 
     /**
      * =============================

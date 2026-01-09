@@ -53,13 +53,14 @@
                 class="form-select @error('bidang_kode') is-invalid @enderror"
                 required 
                 onchange="updateKodeBarang(); loadBarangByBidang();">
-            <option value="">-- Pilih Bidang --</option>
-            @foreach($bidang as $b)
-                <option value="{{ $b->kode }}" 
-                    {{ old('bidang_kode') == $b->kode ? 'selected' : '' }}>
-                    {{ $b->nama }} ({{ $b->kode }})  <!-- PERUBAHAN DISINI: $b->nama -->
-                </option>
-            @endforeach
+           <option value="">-- Pilih Bidang --</option>
+@foreach($bidangs as $b)
+    <option value="{{ $b->kode }}"
+        {{ old('bidang_kode') == $b->kode ? 'selected' : '' }}>
+        {{ $b->nama }} ({{ $b->kode }})
+    </option>
+@endforeach
+
         </select>
         @error('bidang_kode')
             <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -77,10 +78,10 @@
                                         onchange="updateKodeBarang()">
                                     <option value="">-- Pilih Jenis --</option>
                                     <option value="pakai_habis" {{ old('jenis_barang') == 'pakai_habis' ? 'selected' : '' }}>
-                                        Pakai Habis
+                                        pakai habis
                                     </option>
                                     <option value="aset_tetap" {{ old('jenis_barang') == 'aset_tetap' ? 'selected' : '' }}>
-                                        Aset Tetap
+                                        aset tetap
                                     </option>
                                 </select>
                                 @error('jenis_barang')

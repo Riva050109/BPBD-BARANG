@@ -13,13 +13,12 @@ class Barang extends Model
     'kode_barang',
     'nama_barang',
     'jenis_barang',
-    'kategori_id',
+    'kategori_barang',
     'satuan',
     'stok',
     'harga_satuan',
-    'keterangan',
+    'keterangan'
 ];
-
 
     protected $casts = [
         'is_active' => 'boolean',
